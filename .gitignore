@@ -5,6 +5,10 @@
 /.ipynb_checkpoints
 .ipynb_checkpoints
 
+#Dataset folder
+
+/dataset
+/dataset/
 # vscode related files:
 /.vscode/
 .vscode/
