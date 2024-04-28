@@ -11,11 +11,15 @@ class TimeToFirstSpikeEncoder(Behavior):
     def initialize(self, ng):
         self.data = self.parameter("data", None, required=True)
         self.duration = self.parameter("duration", None, required=True)
+        self.sleep = self.parameter("sleep", None, required=True)
         self.theta = self.parameter("theta", None, required=True)
+        self.epsilon = self.parameter("epsilon", 1e-3)
 
         if not isinstance(self.data, torch.Tensor):
             self.data = torch.tensor(self.data)
-        self.epsilon = 1e-10
+        if self.data.dim() > 1:
+            print("Data must be converted to vector first.")
+        # self.encoded_spikes = torch.zeros((self.duration,) + self.data.shape, dtype=torch.bool)
         self.spikes = torch.zeros((self.duration,) + self.data.shape, dtype=torch.bool)
         self.data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
         self.data = (self.data * (1 - self.epsilon)) + self.epsilon
@@ -29,8 +33,8 @@ class TimeToFirstSpikeEncoder(Behavior):
         # self.ttfs_priority = self.get_ttfs_priority()
 
     def forward(self, ng):
-        # print(self.spikes[ng.network.iteration % self.duration])
-        ng.spike = self.spikes[(ng.network.iteration - 1) % self.duration]
+        is_sleep = (ng.network.iteration - 1) % (self.duration + self.sleep) < self.duration
+        ng.spike = is_sleep * self.spikes[(ng.network.iteration - 1) % self.duration]
 
     def get_ttfs_priority(self):
         # Create a list of tuples (value, index)
