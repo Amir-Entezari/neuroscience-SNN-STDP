@@ -1,10 +1,7 @@
-import math
-
-import numpy as np
-from pymonntorch import *
-import torch
-from scipy.stats import norm
 import matplotlib.pyplot as plt
+import torch
+from pymonntorch import *
+from scipy.stats import norm
 
 
 class TimeToFirstSpikeEncoder(Behavior):
@@ -74,7 +71,7 @@ class NumberEncoder(Behavior):
         spike_times = []
         for neuron_id in range(self.lower_bound, self.upper_bound + 1):
             pdf_at_x = self.get_pdf_at_x(self.num, mean=neuron_id)
-            if pdf_at_x>self.epsilon:
+            if pdf_at_x > self.epsilon:
                 print(pdf_at_x)
                 spike_time = ((pdf_at_x - self.normal_dists[0].min()) / (
                         self.normal_dists[0].max() - self.normal_dists[0].min())) * self.duration
