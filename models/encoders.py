@@ -107,3 +107,37 @@ class NumberEncoder(Behavior):
         ax.set_ylabel('spike t')
         ax.axvline(x=self.num, color='r', linestyle='--', label=f'x={self.num}')
 
+
+class PoissonEncoder(Behavior):
+    def initialize(self, ng):
+        self.data = self.parameter("data", None, required=True)
+        self.duration = self.parameter("duration", None, required=True)
+        self.sleep = self.parameter("sleep", None, required=True)
+        self.epsilon = self.parameter("epsilon", 1e-3)
+
+        if not isinstance(self.data, torch.Tensor):
+            self.data = torch.tensor(self.data)
+        if self.data.dim() > 1:
+            print("Data must be converted to vector first.")
+
+        # self.spikes = torch.zeros((self.duration,) + self.data.shape, dtype=torch.bool)
+        self.spikes = torch.zeros((self.data.shape[0], self.duration), dtype=torch.bool)
+
+        self.data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
+        self.data = (self.data * (1 - self.epsilon)) + self.epsilon
+
+        # for i in range(self.data.shape[0]):
+        #     spike_times = np.random.poisson(self.data[i], self.duration)
+        #     for j, t in enumerate(spike_times):
+        #         if t > 0:
+        #             self.spikes[j: t + j, i] = 1
+        for i in range(self.data.shape[0]):
+            spike_times = np.random.poisson(self.data[i], self.duration)
+            for j, t in enumerate(spike_times):
+                if t > 0:
+                    self.spikes[i, j: t + j] = 1
+        self.spikes = self.spikes.T
+
+    def forward(self, ng):
+        is_sleep = (ng.network.iteration - 1) % (self.duration + self.sleep) < self.duration
+        ng.spike = is_sleep * self.spikes[(ng.network.iteration - 1) % self.duration]
