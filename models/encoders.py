@@ -95,13 +95,15 @@ class NumberEncoder(Behavior):
         pdf_at_x = norm.pdf(num, loc=mean, scale=self.std)
         return pdf_at_x
 
-    def plot_x(self):
+    def plot_x(self, ax):
         pdf_at_x_list = []
-        plt.figure(figsize=(12, 6))
+        # plt.figure(figsize=(12, 6))
         for i in range(self.lower_bound, self.upper_bound + 1):
             plt.plot(self.x_values[i], self.normal_dists[i])
             pdf_at_x = self.get_pdf_at_x(self.num, mean=i)
             pdf_at_x_list.append(pdf_at_x)
-            plt.scatter(self.num, pdf_at_x, color='r', label=f'({self.num}, {pdf_at_x:.2f})')
-        plt.axvline(x=self.num, color='r', linestyle='--', label=f'x={self.num}')
-        plt.show()
+            ax.scatter(self.num, pdf_at_x, color='r', label=f'({self.num}, {pdf_at_x:.2f})')
+        ax.set_xlabel('number(neuron_id)')
+        ax.set_ylabel('spike t')
+        ax.axvline(x=self.num, color='r', linestyle='--', label=f'x={self.num}')
+
