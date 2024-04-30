@@ -196,7 +196,9 @@ class CustomNeuronGroup(NeuronGroup):
     def add_activity_plot(self,
                           ax):
         # Plot the activity
-        ax.plot(self.network[f"{self.tag}_rec", 0].variables["activity"], label="activity")
+        activities = self.network[f"{self.tag}_rec", 0].variables["activity"]
+        x_range = np.arange(1, len(activities) + 1)
+        ax.plot(x_range, activities, label="activity")
         ax.set_xlabel('Time')
         ax.set_ylabel('activity')
         ax.legend()
