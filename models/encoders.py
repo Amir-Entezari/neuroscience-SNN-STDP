@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import torch
 from pymonntorch import *
 from scipy.stats import norm
 
@@ -72,7 +71,6 @@ class NumberEncoder(Behavior):
         for neuron_id in range(self.lower_bound, self.upper_bound + 1):
             pdf_at_x = self.get_pdf_at_x(self.num, mean=neuron_id)
             if pdf_at_x > self.epsilon:
-                print(pdf_at_x)
                 spike_time = ((pdf_at_x - self.normal_dists[0].min()) / (
                         self.normal_dists[0].max() - self.normal_dists[0].min())) * self.duration
                 spike_times.append((neuron_id, int(spike_time)))
