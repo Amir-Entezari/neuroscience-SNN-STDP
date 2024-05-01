@@ -1,0 +1,60 @@
+\documentclass{report}
+
+\usepackage[textwidth=16cm, textheight=24cm]{geometry}
+% Packages for special characters and symbols
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+
+% Package for hyperlinks
+\usepackage{hyperref}
+
+% Package for graphics
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{dirtree}
+
+% Package for better tables
+\usepackage{booktabs}
+\usepackage{xepersian}
+
+% \setlatintextfont{Times New Roman}
+% \settextfont{Yas.ttf}
+\settextfont[
+BoldFont=Yas Bd.TTF]{Yas.TTF}
+% Set the title, author, and date
+\title{گزارش پروژه دوم علوم اعصاب محاسباتی}
+\author{امیرحسین انتظاری}
+\date{\today}
+
+% Begin document
+\begin{document}
+
+% Create the title
+\maketitle
+\newpage
+% Create a table of contents
+\tableofcontents
+% Separate the table of contents from the next content with a new page
+% \clearpage
+
+\newgeometry{textwidth=15cm,textheight=22cm}
+    \begin{abstract}
+        هدف از این پروژه، پیاده سازی کدگذاری کردن ورودی شبکه، یادگیری
+        (بدون ناظر و تقویتی) 
+        است. در این پروژه از مباحثی که در پروژه های قبلی یاد گرفتیم،
+        ( مانند مدل های نورونی، سیناپس و...)، 
+        استفاده می‌کنیم.
+    \end{abstract}
+\restoregeometry
+
+\include{part1.tex}
+\newpage
+\include{part2.tex}
+\newpage
+\include{part3.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Bibliography section %%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{bibelography.tex}
+\end{document}
