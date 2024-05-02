@@ -153,8 +153,8 @@ class FeedDataset(Behavior):
         self.prev_data_idx == data_idx or self.reset_params(ng)
 
         is_sleep = (ng.network.iteration - 1) % (
-                self.encoded_dataset.duration + self.sleep) < self.encoded_dataset.duration
-        ng.spike = is_sleep * self.encoded_dataset.encoded_dataset[data_idx][
+                    self.encoded_dataset.duration + self.sleep) < self.encoded_dataset.duration
+        ng.spike = is_sleep * self.encoded_dataset[curr_data_idx][
             (ng.network.iteration - 1) % self.encoded_dataset.duration]
 
     def reset_params(self, ng):
