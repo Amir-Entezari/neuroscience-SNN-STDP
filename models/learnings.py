@@ -36,10 +36,9 @@ class STDP(Behavior):
         """ Calculate A+ for soft bounds for a matrix of weights """
         return w*(self.w_max - w) ** self.eta
 
-
     def soft_bound_A_minus(self, w):
         """ Calculate A- for soft bounds for a matrix of weights """
-        return 0*np.abs(w ** self.eta)
+        return np.abs(w) ** self.eta
 
     def hard_bound_A_plus(self, w):
         """ Calculate A+ for hard bounds for a matrix of weights """
