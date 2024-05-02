@@ -27,14 +27,17 @@ class STDP(Behavior):
 
         # Update weights
         # print(sg.x.max(), sg.y.max())
-        dW = self.learning_rate * (-self.soft_bound_A_minus(sg.W) * sg.src.spike.byte().to(torch.float).reshape(-1, 1).mm(sg.y.reshape(1, -1)) \
-                + self.soft_bound_A_plus(sg.W) * sg.x.reshape(-1, 1).mm(sg.dst.spike.byte().to(torch.float).reshape(1, -1)))
-        dW -= dW.sum(axis=0)/sg.src.size
+        dW = self.learning_rate * (
+                    -self.soft_bound_A_minus(sg.W) * sg.src.spike.byte().to(torch.float).reshape(-1, 1).mm(
+                sg.y.reshape(1, -1)) \
+                    + self.soft_bound_A_plus(sg.W) * sg.x.reshape(-1, 1).mm(
+                sg.dst.spike.byte().to(torch.float).reshape(1, -1)))
+        dW -= dW.sum(axis=0) / sg.src.size
         sg.W += dW
 
     def soft_bound_A_plus(self, w):
         """ Calculate A+ for soft bounds for a matrix of weights """
-        return w*(self.w_max - w) ** self.eta
+        return w * (self.w_max - w) ** self.eta
 
     def soft_bound_A_minus(self, w):
         """ Calculate A- for soft bounds for a matrix of weights """
