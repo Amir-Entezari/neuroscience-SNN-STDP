@@ -1,7 +1,7 @@
-from PIL import Image
-import torch
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
+
 
 class CustomImage:
     def __init__(self, image_path):
@@ -15,11 +15,8 @@ class CustomImage:
         # Convert the image to a NumPy array
         image_array = np.array(self.image)
 
-        # Convert the NumPy array to a Torch tensor
-        image_tensor = torch.from_numpy(image_array)
-
-        # Flatten the tensor into a vector
-        image_vector = image_tensor.view(-1)
+        # Flatten into a vector
+        image_vector = image_array.flatten()
 
         return image_vector
 
