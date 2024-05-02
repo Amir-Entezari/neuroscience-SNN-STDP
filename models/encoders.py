@@ -130,3 +130,26 @@ class PoissonEncoder(Encoder):
         return encoded_spikes
 
 
+class FeedDataset(Behavior):
+    def initialize(self, ng):
+        self.encoded_dataset = self.parameter("encoded_dataset", None, required=True)
+        # self.duration = self.parameter("duration", None, required=True)
+        self.sleep = self.parameter("sleep", None, required=True)
+
+        ng.network.duration = self.encoded_dataset.duration
+        self.prev_data_idx = 0
+
+    def forward(self, ng):
+        # TODO: rewrite the encoded_dataset to ignore multiple dots
+        data_idx = (ng.network.iteration // self.encoded_dataset.duration) % self.encoded_dataset.dataset.shape[0]
+
+        self.prev_data_idx == data_idx or self.reset_params(ng)
+
+        is_sleep = (ng.network.iteration - 1) % (
+                self.encoded_dataset.duration + self.sleep) < self.encoded_dataset.duration
+        ng.spike = is_sleep * self.encoded_dataset.encoded_dataset[data_idx][
+            (ng.network.iteration - 1) % self.encoded_dataset.duration]
+
+    def reset_params(self, ng):
+        # TODO: reset sg.x, sg.y and ng.u or other histories parameter
+        ng.u = ng.vector(-70)
