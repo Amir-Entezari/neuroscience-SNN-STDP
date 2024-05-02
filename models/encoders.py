@@ -141,11 +141,10 @@ class PoissonEncoder(Encoder):
 class FeedDataset(Behavior):
     def initialize(self, ng):
         self.encoded_dataset = self.parameter("encoded_dataset", None, required=True)
-        # self.duration = self.parameter("duration", None, required=True)
         self.sleep = self.parameter("sleep", None, required=True)
 
         ng.network.duration = self.encoded_dataset.duration
-        self.prev_data_idx = 0
+        ng.network.sleep = self.sleep
 
     def forward(self, ng):
         # TODO: rewrite the encoded_dataset to ignore multiple dots
