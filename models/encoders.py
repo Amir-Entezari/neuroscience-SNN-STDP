@@ -148,15 +148,21 @@ class FeedDataset(Behavior):
 
     def forward(self, ng):
         # TODO: rewrite the encoded_dataset to ignore multiple dots
-        data_idx = (ng.network.iteration // self.encoded_dataset.duration) % self.encoded_dataset.dataset.shape[0]
-
-        self.prev_data_idx == data_idx or self.reset_params(ng)
+        curr_data_idx = (ng.network.iteration // (self.encoded_dataset.duration + self.sleep)) % \
+                        self.encoded_dataset.dataset.shape[0]
 
         is_sleep = (ng.network.iteration - 1) % (
                     self.encoded_dataset.duration + self.sleep) < self.encoded_dataset.duration
         ng.spike = is_sleep * self.encoded_dataset[curr_data_idx][
             (ng.network.iteration - 1) % self.encoded_dataset.duration]
 
-    def reset_params(self, ng):
-        # TODO: reset sg.x, sg.y and ng.u or other histories parameter
-        ng.u = ng.vector(-70)
+
+class ResetHistory(Behavior):
+    def forward(self, sg):
+        ((sg.network.iteration - 1) % (sg.network.duration + sg.network.sleep)) == 0 and self.reset_params(sg)
+
+    def reset_params(self, sg):
+        sg.src.u = sg.src.u_reset
+        sg.dst.u = sg.dst.u_reset
+        sg.x = sg.src.vector(0.0)
+        sg.y = sg.dst.vector(0.0)
