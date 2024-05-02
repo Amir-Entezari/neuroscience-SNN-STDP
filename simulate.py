@@ -285,7 +285,7 @@ class CustomSynapseGroup(SynapseGroup):
         ax.legend()
         ax.set_title(f'Synapse Weights for neuron {neuron_id}')
 
-    def add_cosine_similarity(self, ax, neuron_1, neuron_2):
+    def add_cosine_similarity_plot(self, ax, neuron_1, neuron_2):
         cosine_similarity_recorder = []
         for t in range(self.network.iteration):
             w_neuron_1 = self.network[f"{self.tag}_rec", 0].variables["W"][t, :, neuron_1]
