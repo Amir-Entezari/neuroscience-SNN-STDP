@@ -60,14 +60,14 @@ class NumberEncoder(Encoder):
         self.epsilon = epsilon
         self.std = std
 
+        self.x_values = torch.tensor([np.linspace(self.lower_bound, self.upper_bound, 1000) for mean in
+                                 range(self.lower_bound, self.upper_bound + 1)])
+        self.normal_dists = torch.tensor([norm.pdf(self.x_values[mean], loc=mean, scale=self.std) for mean in
+                                     range(self.lower_bound, self.upper_bound + 1)])
+
         self.encoded_dataset = [self.data_encoder(data) for data in self.dataset]
-        print(self.encoded_dataset[0].shape)
 
     def data_encoder(self, data):
-        x_values = torch.tensor([np.linspace(self.lower_bound, self.upper_bound, 1000) for mean in
-                                 range(self.lower_bound, self.upper_bound + 1)])
-        normal_dists = torch.tensor([norm.pdf(x_values[mean], loc=mean, scale=self.std) for mean in
-                                     range(self.lower_bound, self.upper_bound + 1)])
 
         encoded_spikes = torch.zeros((self.duration, self.upper_bound - self.lower_bound + 1), dtype=torch.bool)
 
@@ -75,8 +75,8 @@ class NumberEncoder(Encoder):
         for neuron_id in range(self.lower_bound, self.upper_bound + 1):
             pdf_at_x = self.get_pdf_at_x(data, mean=neuron_id)
             if pdf_at_x > self.epsilon:
-                spike_time = ((pdf_at_x - normal_dists[0].min()) / (
-                        normal_dists[0].max() - normal_dists[0].min())) * self.duration
+                spike_time = ((pdf_at_x - self.normal_dists[0].min()) / (
+                        self.normal_dists[0].max() - self.normal_dists[0].min())) * self.duration
                 spike_times.append((neuron_id, int(spike_time)))
 
         for neuron_id, spike_time in spike_times:
