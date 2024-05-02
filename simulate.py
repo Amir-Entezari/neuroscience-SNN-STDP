@@ -3,6 +3,22 @@ import torch
 import matplotlib.pyplot as plt
 
 
+def cosine_similarity(tensor_a, tensor_b):
+    # Validate that the tensors are of same size
+    if tensor_a.size() != tensor_b.size():
+        raise ValueError("Tensors are not of the same size")
+
+    dot_product = torch.dot(tensor_a.flatten(), tensor_b.flatten())
+    norm_a = torch.norm(tensor_a)
+    norm_b = torch.norm(tensor_b)
+
+    if norm_a.item() == 0 or norm_b.item() == 0:
+        raise ValueError("One of the tensors has zero magnitude, cannot compute cosine similarity")
+
+    similarity = dot_product / (norm_a * norm_b)
+    return similarity
+
+
 class Simulation:
     def __init__(self, net: Network = None):
         self.net: Network
@@ -269,3 +285,14 @@ class CustomSynapseGroup(SynapseGroup):
         ax.legend()
         ax.set_title(f'Synapse Weights for neuron {neuron_id}')
 
+    def add_cosine_similarity(self, ax, neuron_1, neuron_2):
+        cosine_similarity_recorder = []
+        for t in range(self.network.iteration):
+            w_neuron_1 = self.network[f"{self.tag}_rec", 0].variables["W"][t, :, neuron_1]
+            w_neuron_2 = self.network[f"{self.tag}_rec", 0].variables["W"][t, :, neuron_2]
+            cosine_similarity_recorder.append(cosine_similarity(w_neuron_1, w_neuron_2))
+        ax.plot(cosine_similarity_recorder)
+        ax.set_xlabel('t')
+        ax.set_ylabel('Cosine similarity')
+        ax.legend()
+        ax.set_title(f'Cosine similarity between neuron {neuron_1} and neuron {neuron_2}')
