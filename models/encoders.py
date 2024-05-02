@@ -1,83 +1,82 @@
 import matplotlib.pyplot as plt
+import torch
 from pymonntorch import *
 from scipy.stats import norm
 
 
-class TimeToFirstSpikeEncoder(Behavior):
-    def initialize(self, ng):
-        self.data = self.parameter("data", None, required=True)
-        self.duration = self.parameter("duration", None, required=True)
-        self.sleep = self.parameter("sleep", None, required=True)
-        self.theta = self.parameter("theta", None, required=True)
-        self.epsilon = self.parameter("epsilon", 1e-3)
+class Encoder:
+    def __init__(self, dataset, duration):
+        self.dataset = dataset
+        self.duration = duration
+        # self.sleep = sleep
+        self.encoded_dataset = None
 
-        if not isinstance(self.data, torch.Tensor):
-            self.data = torch.tensor(self.data)
-        if self.data.dim() > 1:
+        if not isinstance(self.dataset, torch.Tensor):
+            self.dataset = torch.tensor(self.dataset)
+
+    def data_encoder(self, **kwargs):
+        pass
+
+
+class TimeToFirstSpikeEncoder(Encoder):
+    def __init__(self, theta, epsilon=1e-3, **kwargs):
+        super().__init__(**kwargs)
+        self.theta = theta
+        self.epsilon = epsilon
+
+        self.encoded_dataset = [self.data_encoder(data) for data in self.dataset]
+
+    def data_encoder(self, data):
+        if not isinstance(data, torch.Tensor):
+            data = torch.tensor(data)
+        if data.dim() > 1:
             print("Data must be converted to vector first.")
         # self.encoded_spikes = torch.zeros((self.duration,) + self.data.shape, dtype=torch.bool)
-        self.spikes = torch.zeros((self.duration,) + self.data.shape, dtype=torch.bool)
-        self.data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
-        self.data = (self.data * (1 - self.epsilon)) + self.epsilon
+        encoded_spikes = torch.zeros((self.duration,) + data.shape, dtype=torch.bool)
+
+        data = (data - data.min()) / (data.max() - data.min())
+        data = (data * (1 - self.epsilon)) + self.epsilon
         tau = -self.duration / np.log(self.epsilon / self.theta)
         for t in range(self.duration):
             # threshold = self.theta * np.exp(-(t + 1) / tau)
             threshold = np.exp(-(t + 1) / tau)
-            self.spikes[t, :] = self.data >= threshold
-            self.data[self.data >= threshold] = 0
+            encoded_spikes[t, :] = data >= threshold
+            data[data >= threshold] = 0
 
-        # self.ttfs_priority = self.get_ttfs_priority()
-
-    def forward(self, ng):
-        is_sleep = (ng.network.iteration - 1) % (self.duration + self.sleep) < self.duration
-        ng.spike = is_sleep * self.spikes[(ng.network.iteration - 1) % self.duration]
-
-    def get_ttfs_priority(self):
-        # Create a list of tuples (value, index)
-        priority_list = [(value, index) for index, value in enumerate(self.input)]
-        # Sort the list based on value in descending order
-        priority_list.sort(reverse=True)
-
-        # Extract the indices from the sorted list
-        result = torch.tensor([index for _, index in priority_list])
-        return result
+        return encoded_spikes
 
 
-class NumberEncoder(Behavior):
-    def initialize(self, ng):
-        self.num = self.parameter("num", None, required=True)
-        self.upper_bound = self.parameter("upper_bound", 10)
-        self.lower_bound = self.parameter("lower_bound", 0)
-        self.duration = self.parameter("duration", None, required=True)
-        self.epsilon = self.parameter("epsilon", 1e-2)
-        self.std = self.parameter("std", 1.0)
+class NumberEncoder(Encoder):
+    def __init__(self, lower_bound=0, upper_bound=10, epsilon=1e-2, std=1, **kwargs):
+        super().__init__(**kwargs)
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+        self.epsilon = epsilon
+        self.std = std
 
-        # domain = self.upper_bound - self.lower_bound
-        # self.x_values = [np.linspace(mean - (domain / 2) * self.std, mean + (domain / 2) * self.std, 1000) for mean in
-        #                  range(self.lower_bound, self.upper_bound + 1)]
-        self.x_values = torch.tensor([np.linspace(self.lower_bound, self.upper_bound, 1000) for mean in
-                                      range(self.lower_bound, self.upper_bound + 1)])
-        self.normal_dists = torch.tensor([norm.pdf(self.x_values[mean], loc=mean, scale=self.std) for mean in
-                                          range(self.lower_bound, self.upper_bound + 1)])
+        self.encoded_dataset = [self.data_encoder(data) for data in self.dataset]
+        print(self.encoded_dataset[0].shape)
 
-        self.spikes = torch.zeros((self.duration, self.upper_bound - self.lower_bound + 1), dtype=torch.bool)
-        self.scheduler()
+    def data_encoder(self, data):
+        x_values = torch.tensor([np.linspace(self.lower_bound, self.upper_bound, 1000) for mean in
+                                 range(self.lower_bound, self.upper_bound + 1)])
+        normal_dists = torch.tensor([norm.pdf(x_values[mean], loc=mean, scale=self.std) for mean in
+                                     range(self.lower_bound, self.upper_bound + 1)])
 
-    def forward(self, ng):
-        ng.spike = self.spikes[(ng.network.iteration - 1) % self.duration]
+        encoded_spikes = torch.zeros((self.duration, self.upper_bound - self.lower_bound + 1), dtype=torch.bool)
 
-    def scheduler(self):
         spike_times = []
         for neuron_id in range(self.lower_bound, self.upper_bound + 1):
-            pdf_at_x = self.get_pdf_at_x(self.num, mean=neuron_id)
+            pdf_at_x = self.get_pdf_at_x(data, mean=neuron_id)
             if pdf_at_x > self.epsilon:
-                spike_time = ((pdf_at_x - self.normal_dists[0].min()) / (
-                        self.normal_dists[0].max() - self.normal_dists[0].min())) * self.duration
+                spike_time = ((pdf_at_x - normal_dists[0].min()) / (
+                        normal_dists[0].max() - normal_dists[0].min())) * self.duration
                 spike_times.append((neuron_id, int(spike_time)))
 
         for neuron_id, spike_time in spike_times:
             # print(self.duration - spike_time - 1, neuron_id)
-            self.spikes[self.duration - spike_time - 1, neuron_id - self.lower_bound] = True
+            encoded_spikes[self.duration - spike_time - 1, neuron_id - self.lower_bound] = True
+        return encoded_spikes
 
     def create_normal_dist(self, mean, std=1):
         x_values = np.linspace(mean - 5 * std, mean + 5 * std, 1000)
@@ -103,36 +102,31 @@ class NumberEncoder(Behavior):
         ax.axvline(x=self.num, color='r', linestyle='--', label=f'x={self.num}')
 
 
-class PoissonEncoder(Behavior):
-    def initialize(self, ng):
-        self.data = self.parameter("data", None, required=True)
-        self.duration = self.parameter("duration", None, required=True)
-        self.sleep = self.parameter("sleep", None, required=True)
-        self.epsilon = self.parameter("epsilon", 1e-3)
+class PoissonEncoder(Encoder):
+    def __init__(self, epsilon=1e-3, **kwargs):
+        super().__init__(**kwargs)
+        self.epsilon = epsilon
 
-        if not isinstance(self.data, torch.Tensor):
-            self.data = torch.tensor(self.data)
-        if self.data.dim() > 1:
+        self.encoded_dataset = [self.data_encoder(data) for data in self.dataset]
+
+    def data_encoder(self, data):
+        if not isinstance(data, torch.Tensor):
+            data = torch.tensor(data)
+        if data.dim() > 1:
             print("Data must be converted to vector first.")
 
         # self.spikes = torch.zeros((self.duration,) + self.data.shape, dtype=torch.bool)
-        self.spikes = torch.zeros((self.data.shape[0], self.duration), dtype=torch.bool)
+        encoded_spikes = torch.zeros((data.shape[0], self.duration), dtype=torch.bool)
 
-        self.data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
-        self.data = (self.data * (1 - self.epsilon)) + self.epsilon
+        data = (data - data.min()) / (data.max() - data.min())
+        data = (data * (1 - self.epsilon)) + self.epsilon
 
-        # for i in range(self.data.shape[0]):
-        #     spike_times = np.random.poisson(self.data[i], self.duration)
-        #     for j, t in enumerate(spike_times):
-        #         if t > 0:
-        #             self.spikes[j: t + j, i] = 1
-        for i in range(self.data.shape[0]):
-            spike_times = np.random.poisson(self.data[i], self.duration)
+        for i in range(data.shape[0]):
+            spike_times = np.random.poisson(data[i], self.duration)
             for j, t in enumerate(spike_times):
                 if t > 0:
-                    self.spikes[i, j: t + j] = 1
-        self.spikes = self.spikes.T
+                    encoded_spikes[i, j: t + j] = 1
+        encoded_spikes = encoded_spikes.T
+        return encoded_spikes
 
-    def forward(self, ng):
-        is_sleep = (ng.network.iteration - 1) % (self.duration + self.sleep) < self.duration
-        ng.spike = is_sleep * self.spikes[(ng.network.iteration - 1) % self.duration]
+
