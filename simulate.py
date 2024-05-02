@@ -292,7 +292,7 @@ class CustomSynapseGroup(SynapseGroup):
             w_neuron_2 = self.network[f"{self.tag}_rec", 0].variables["W"][t, :, neuron_2]
             cosine_similarity_recorder.append(cosine_similarity(w_neuron_1, w_neuron_2))
         ax.plot(cosine_similarity_recorder)
-        ax.set_xlabel('t')
+        ax.set_xlabel('time')
         ax.set_ylabel('Cosine similarity')
         ax.legend()
         ax.set_title(f'Cosine similarity between neuron {neuron_1} and neuron {neuron_2}')
