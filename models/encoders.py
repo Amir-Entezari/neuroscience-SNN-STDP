@@ -98,14 +98,16 @@ class NumberEncoder(Encoder):
     def plot_x(self, ax):
         pdf_at_x_list = []
         # plt.figure(figsize=(12, 6))
-        for i in range(self.lower_bound, self.upper_bound + 1):
-            plt.plot(self.x_values[i], self.normal_dists[i])
-            pdf_at_x = self.get_pdf_at_x(self.num, mean=i)
-            pdf_at_x_list.append(pdf_at_x)
-            ax.scatter(self.num, pdf_at_x, color='r', label=f'({self.num}, {pdf_at_x:.2f})')
+        for data in self.dataset:
+            for i in range(self.lower_bound, self.upper_bound + 1):
+                plt.plot(self.x_values[i], self.normal_dists[i])
+                pdf_at_x = self.get_pdf_at_x(data, mean=i)
+                pdf_at_x_list.append(pdf_at_x)
+                ax.scatter(data, pdf_at_x, color='r')
+            ax.axvline(x=data, color='r', linestyle='--', label=f'x={data:.2f}')
+        ax.legend()
         ax.set_xlabel('number(neuron_id)')
-        ax.set_ylabel('spike t')
-        ax.axvline(x=self.num, color='r', linestyle='--', label=f'x={self.num}')
+        ax.set_ylabel('pdf at t (spike priority)')
 
 
 class PoissonEncoder(Encoder):
