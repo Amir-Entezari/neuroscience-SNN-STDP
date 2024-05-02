@@ -14,6 +14,12 @@ class Encoder:
         if not isinstance(self.dataset, torch.Tensor):
             self.dataset = torch.tensor(self.dataset)
 
+    def __getitem__(self, index):
+        return self.encoded_dataset[index]
+
+    def __setitem__(self, index, value):
+        self.encoded_dataset[index] = value
+
     def data_encoder(self, **kwargs):
         pass
 
