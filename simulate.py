@@ -261,3 +261,11 @@ class CustomSynapseGroup(SynapseGroup):
         params_info += f"Synapse {self.tag} params:{self.behavior[synapse_idx].init_kwargs}\n"
         ax.text(text_x, text_y, params_info, transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5),
                 fontsize=8)
+
+    def add_weights_plot(self, ax, neuron_id):
+        ax.plot(self.network[f"{self.tag}_rec", 0].variables["W"][:, :, neuron_id])
+        ax.set_xlabel('t')
+        ax.set_ylabel('Weights')
+        ax.legend()
+        ax.set_title(f'Synapse Weights for neuron {neuron_id}')
+
