@@ -75,9 +75,9 @@ class NumberEncoder(Encoder):
         self.std = std
 
         self.x_values = torch.tensor([np.linspace(self.lower_bound, self.upper_bound, 1000) for mean in
-                                 range(self.lower_bound, self.upper_bound + 1)])
+                                      range(self.lower_bound, self.upper_bound + 1)])
         self.normal_dists = torch.tensor([norm.pdf(self.x_values[mean], loc=mean, scale=self.std) for mean in
-                                     range(self.lower_bound, self.upper_bound + 1)])
+                                          range(self.lower_bound, self.upper_bound + 1)])
 
         self.encoded_dataset = [self.data_encoder(data) for data in self.dataset]
 
@@ -191,10 +191,10 @@ class FeedDataset(Behavior):
     def forward(self, ng):
         # TODO: rewrite the encoded_dataset to ignore multiple dots
         ng.network.curr_data_idx = (ng.network.iteration // (self.encoded_dataset.duration + self.sleep)) % \
-                        self.encoded_dataset.dataset.shape[0]
+                                   self.encoded_dataset.dataset.shape[0]
 
         is_sleep = (ng.network.iteration - 1) % (
-                    self.encoded_dataset.duration + self.sleep) < self.encoded_dataset.duration
+                self.encoded_dataset.duration + self.sleep) < self.encoded_dataset.duration
         ng.spike = is_sleep * self.encoded_dataset[ng.network.curr_data_idx][
             (ng.network.iteration - 1) % self.encoded_dataset.duration]
 
