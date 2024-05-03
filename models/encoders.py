@@ -51,6 +51,20 @@ class TimeToFirstSpikeEncoder(Encoder):
 
         return encoded_spikes
 
+    def add_encoder_info(self,
+                         ax,
+                         text_x=0,
+                         text_y=0.05):
+        info = {
+            "duration": self.duration,
+            "theta": self.theta,
+            "epsilon": self.epsilon,
+        }
+        params_info = f"""{self.__class__.__name__} params:\n"""
+        for key, value in info.items():
+            params_info += f"{key}: {value}\n"
+        ax.text(text_x, text_y, params_info, transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5))
+
 
 class NumberEncoder(Encoder):
     def __init__(self, lower_bound=0, upper_bound=10, epsilon=1e-2, std=1, **kwargs):
@@ -109,6 +123,22 @@ class NumberEncoder(Encoder):
         ax.set_xlabel('number(neuron_id)')
         ax.set_ylabel('pdf at t (spike priority)')
 
+    def add_encoder_info(self,
+                         ax,
+                         text_x=0,
+                         text_y=0.05):
+        info = {
+            "duration": self.duration,
+            "lower_bound": self.lower_bound,
+            "upper_bound": self.upper_bound,
+            "epsilon": self.epsilon,
+            "std": self.std
+        }
+        params_info = f"""{self.__class__.__name__} params:\n"""
+        for key, value in info.items():
+            params_info += f"{key}: {value}\n"
+        ax.text(text_x, text_y, params_info, transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5))
+
 
 class PoissonEncoder(Encoder):
     def __init__(self, epsilon=1e-3, **kwargs):
@@ -137,6 +167,18 @@ class PoissonEncoder(Encoder):
         encoded_spikes = encoded_spikes.T
         return encoded_spikes
 
+    def add_encoder_info(self,
+                         ax,
+                         text_x=0,
+                         text_y=0.05):
+        info = {
+            "duration": self.duration,
+            "epsilon": self.epsilon,
+        }
+        params_info = f"""{self.__class__.__name__} params:\n"""
+        for key, value in info.items():
+            params_info += f"{key}: {value}\n"
+        ax.text(text_x, text_y, params_info, transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.5))
 
 class FeedDataset(Behavior):
     def initialize(self, ng):
