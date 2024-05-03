@@ -157,12 +157,3 @@ class FeedDataset(Behavior):
             (ng.network.iteration - 1) % self.encoded_dataset.duration]
 
 
-class ResetHistory(Behavior):
-    def forward(self, sg):
-        ((sg.network.iteration - 1) % (sg.network.duration + sg.network.sleep)) == 0 and self.reset_params(sg)
-
-    def reset_params(self, sg):
-        sg.src.u = sg.src.u_reset
-        sg.dst.u = sg.dst.u_reset
-        sg.x = sg.src.vector(0.0)
-        sg.y = sg.dst.vector(0.0)

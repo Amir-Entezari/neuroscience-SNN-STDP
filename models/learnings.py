@@ -35,6 +35,13 @@ class STDP(Behavior):
         dW -= dW.sum(axis=0) / sg.src.size
         sg.W += dW
 
+        # Reset parameters
+        if ((sg.network.iteration - 1) % (sg.network.duration + sg.network.sleep)) == 0:
+            sg.src.u = sg.src.u_reset
+            sg.dst.u = sg.dst.u_reset
+            sg.x = sg.src.vector(0.0)
+            sg.y = sg.dst.vector(0.0)
+
     def soft_bound_A_plus(self, w):
         """ Calculate A+ for soft bounds for a matrix of weights """
         return w * (self.w_max - w) ** self.eta
