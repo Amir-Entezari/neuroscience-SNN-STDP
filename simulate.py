@@ -42,6 +42,12 @@ class Simulation:
         self.net.initialize()
         self.net.simulate_iterations(iterations=iterations)
 
+    def initialize(self):
+        self.net.initialize()
+
+    def simulate_iterations(self, iterations):
+        self.net.simulate_iterations(iterations=iterations)
+
     def plot_membrane_potential(self, title: str,
                                 model_idx: int = 3,
                                 record_idx=4,
