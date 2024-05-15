@@ -302,3 +302,9 @@ class CustomSynapseGroup(SynapseGroup):
         ax.set_ylabel('Cosine similarity')
         ax.legend()
         ax.set_title(f'Cosine similarity between neuron {neuron_1} and neuron {neuron_2}')
+
+    def add_learning_params_info(self, ax, synapse_idx=8, text_x=0.0, text_y=0.05):
+        params_info = f"{self.behavior[synapse_idx].__class__.__name__} params:\n"
+        for key, value in self.behavior[synapse_idx].init_kwargs.items():
+            params_info += f"{key}: {value}\n"
+        ax.text(text_x, text_y, params_info, transform=ax.transAxes, bbox=dict(facecolor='white', alpha=0.4))
