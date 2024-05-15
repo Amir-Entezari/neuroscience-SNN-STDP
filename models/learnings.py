@@ -69,13 +69,18 @@ class RSTDP(Behavior):
         # Trace parameters
         self.tau_pre = self.parameter("tau_pre", None, required=True)  # Presynaptic trace decay constant
         self.tau_post = self.parameter("tau_post", None, required=True)  # Postsynaptic trace decay constant
+        self.tau_c = self.parameter("tau_c", None, required=True)
         # Parameters of A- and A+
         self.eta = self.parameter("eta", 1.0)  # Adding eta for weight change control
-        self.w_max = self.parameter("w_max", 1.0)  # Maximum weight for hard bounds
+        self.w_max = self.parameter("w_max", None, required=True)  # Maximum weight for hard bounds
+        self.w_min = self.parameter("w_min", None, required=True)  # Minimum weight for hard bounds
         # Learning parameters
         self.learning_rate = self.parameter("learning_rate", None, required=True)
         self.positive_dopamine = self.parameter("positive_dopamine", None, required=True)
         self.negative_dopamine = self.parameter("negative_dopamine", None, required=True)
+
+        self.normalization = self.parameter("normalization", True)
+        self.dopamine_method = self.parameter("dopamine_method", "hard")
 
         # initial value of x and y
         if not hasattr(sg, 'x'):
@@ -99,7 +104,7 @@ class RSTDP(Behavior):
                                    + 1 * sg.x.reshape(-1, 1).mm(sg.dst.spike.byte().to(torch.float).reshape(1, -1)))
         # dC -= dC.sum(axis=0) / sg.src.size
 
-        sg.C += dC
+        sg.C += -sg.C / self.tau_c + dC
 
         if ((sg.network.iteration - 1) % (sg.network.duration + sg.network.sleep)) == 0:
             winners = self.spike_counter.max() == self.spike_counter
@@ -107,13 +112,22 @@ class RSTDP(Behavior):
             self.dopamine_list[sg.network.curr_data_idx] = self.positive_dopamine
             self.dopamine_list = self.dopamine_list * winners.byte()
 
-            sg.C = sg.C @ torch.diag(self.dopamine_list)
-            # sg.C = sg.C/(abs(sg.C).max() or 1)
-            sg.C *= abs((self.w_max - sg.W) * (-1 - sg.W))
-            sg.C -= sg.C.sum(axis=0) / sg.src.size
+            if self.dopamine_method == "hard":
+                sg.C *= abs((self.w_max - sg.W) * (-1 - sg.W))
+                if self.normalization:
+                    sg.C -= sg.C.sum(axis=0) / sg.src.size
+                sg.C = sg.C @ torch.diag(self.dopamine_list)
+                sg.C = sg.C / (abs(sg.C).max() or 1)
+                sg.W += sg.C * abs((self.w_max - sg.W) * (self.w_min - sg.W)) / (self.w_max * self.w_min)
 
-            sg.W += sg.C
-
+            if self.dopamine_method == "soft":
+                # Normalization before C
+                sg.C *= abs((self.w_max - sg.W) * (self.w_min - sg.W)) / abs(self.w_max * self.w_min)
+                sg.C = sg.C / (abs(sg.C).max() or 1)
+                sg.C = sg.C @ torch.diag(self.dopamine_list)
+                if self.normalization:
+                    sg.C -= sg.C.sum(axis=0) / sg.src.size
+                sg.W += sg.C
             # reset parameters
             sg.C = sg.matrix(mode=0.0)
             self.spike_counter = sg.dst.vector()
