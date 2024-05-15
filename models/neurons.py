@@ -20,12 +20,12 @@ class LIF(Behavior):
         # Set parameters
         # self.R = ng.vector(mode=self.R)
         # self.tau = ng.vector(mode=self.tau)
-        self.threshold = ng.vector(mode=self.threshold)
+        ng.threshold = ng.vector(mode=self.threshold)
 
         # initial value of u in neurons
         ng.u_reset = ng.vector(self.u_reset)
         ng.u = ng.vector(mode=self.u_init)
-        ng.spike = ng.u > self.threshold
+        ng.spike = ng.u > ng.threshold
         ng.u[ng.spike] = self.u_reset
 
         if not hasattr(ng, 'last_spike'):
@@ -42,7 +42,7 @@ class LIF(Behavior):
         leakage = ng.u - self.u_rest
         ng.u += ((-leakage + inp_u) / self.tau) * ng.network.dt
         # Firing
-        ng.spike = ng.u > self.threshold
+        ng.spike = ng.u > ng.threshold
         # Reset
         ng.u[ng.spike] = self.u_reset
         # Save last spike
