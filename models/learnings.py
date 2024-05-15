@@ -12,8 +12,9 @@ class STDP(Behavior):
         # Parameters of A- and A+
         self.eta = self.parameter("eta", 1.0)  # Adding eta for weight change control
         self.w_max = self.parameter("w_max", 1.0)  # Maximum weight for hard bounds
-
+        self.w_min = self.parameter("w_min", -1.0)
         self.learning_rate = self.parameter("learning_rate", None, required=True)
+        self.normalization = self.parameter("normalization", True)
         # initial value of x and y
         if not hasattr(sg, 'x'):
             sg.x = sg.src.vector(0.0)  # Presynaptic trace
@@ -27,13 +28,17 @@ class STDP(Behavior):
 
         # Update weights
         # print(sg.x.max(), sg.y.max())
-        dW = self.learning_rate * (
+        sg.dW = self.learning_rate * (
                 -self.soft_bound_A_minus(sg.W) * sg.src.spike.byte().to(torch.float).reshape(-1, 1).mm(
             sg.y.reshape(1, -1)) \
                 + self.soft_bound_A_plus(sg.W) * sg.x.reshape(-1, 1).mm(
             sg.dst.spike.byte().to(torch.float).reshape(1, -1)))
-        dW -= dW.sum(axis=0) / sg.src.size
-        sg.W += dW
+
+        sg.dW *= abs((self.w_max - sg.W) * (-1 - sg.W))
+        if self.normalization:
+            sg.dW -= sg.dW.sum(axis=0) / sg.src.size
+        sg.dW = sg.dW / (abs(sg.dW).max() or 1)
+        sg.W += sg.dW * abs((self.w_max - sg.W) * (self.w_min - sg.W)) / (self.w_max * self.w_min)
 
         # Reset parameters
         if ((sg.network.iteration - 1) % (sg.network.duration + sg.network.sleep)) == 0:
