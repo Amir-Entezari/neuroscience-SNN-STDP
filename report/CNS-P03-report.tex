@@ -10,7 +10,8 @@
 \usepackage{hyperref}
 
 % Package for graphics
-\usepackage{graphicx}
+\usepackage{graphicx, caption}
+\usepackage{fancyhdr} % For fancy headers and footers
 \usepackage{subcaption}
 \usepackage{float}
 \usepackage{listings}
@@ -19,6 +20,36 @@
 % Package for better tables
 \usepackage{booktabs}
 \usepackage{xepersian}
+
+
+
+
+
+% Page dimensions and margin settings
+\geometry{
+  top=0.5cm,
+%   left=3cm,
+  headheight=40pt, % Adjust the header height
+  headsep=10pt, % Separation between header and text
+  includeheadfoot
+}
+
+% Path to your logo
+\newcommand{\headerlogo}{images/Logo.png}
+
+% Header and footer configuration
+\pagestyle{fancy}
+\fancyhf{} % Clear header and footer
+\fancyhead[R]{\includegraphics[height=40pt]{\headerlogo}} % Logo on the Left of the header
+\fancyfoot[C]{\thepage} % Page number at the center of the footer
+
+% Ensure the header and footer lines are removed
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+
+
+
 
 % \setlatintextfont{Times New Roman}
 % \settextfont{Yas.ttf}
@@ -46,11 +77,16 @@ BoldFont=Yas Bd.TTF]{Yas.TTF}
 
 \newgeometry{textwidth=15cm,textheight=22cm}
     \begin{abstract}
-        هدف از این پروژه، پیاده سازی کدگذاری کردن ورودی شبکه، یادگیری
-        (بدون ناظر و تقویتی) 
+        هدف از این پروژه، پیاده سازی کدگذاری کردن ورودی در شبکه های عصبی ضربه‌ای، یادگیری بدون ناظر و یادگیری تقویتی است.
         است. در این پروژه از مباحثی که در پروژه های قبلی یاد گرفتیم،
         ( مانند مدل های نورونی، سیناپس و...)، 
-        استفاده می‌کنیم.
+        استفاده می‌کنیم تا یک شبکه عصبی ضربه ای دو لایه را تشکیل دهیم. ابتدا روش های مختلف کدگذاری، از جمله کدگذاری 
+        $\text{\lr{Time-to-first-spike}}$، 
+        کدگذاری اعداد به کمک توزیع نرمال و کدگذاری به روش پواسون رابررسی میکنیم. بعد از کد کردن محرک ها، نوبت به ورودی دادن آن ها به شبکه می‌شود. در ادامه، شبکه ای متشکل از دو لایه را پیاده سازی می‌کنیم و قانون های یادگیری مختلف، از جمله قانون یادگیری انعطاف‌پذیری وابسته به زمان ضربه 
+        ($STDP$) 
+        و مدل تقویتی آن یعنی 
+        $RSTDP$ 
+        را روی مدل اعمال میکنیم و پارامتر های آن را در شرایط مختلف آزمایش و تحلیل می‌کنیم.
     \end{abstract}
 \restoregeometry
 
