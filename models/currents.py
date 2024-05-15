@@ -102,25 +102,6 @@ class NoisyCurrent(Behavior):
         return scaled_brownian_noise
 
 
-class SinCurrent(Behavior):
-    def initialize(self, ng):
-        self.amplitude = self.parameter("amplitude", None, required=True)
-        self.frequency = self.parameter("frequency", None, required=True)
-        self.phase = self.parameter("phase", 0.0)
-        self.offset = self.parameter("offset", 0.0)
-        self.noise_range = self.parameter("noise_range", 0.0)
-
-        ng.inp_I = ng.vector()
-
-    def forward(self, ng):
-        t = ng.network.iteration * ng.network.dt
-        ng.inp_I = torch.sin(ng.vector(self.frequency * t) + self.phase) * self.amplitude + self.offset
-        self.add_noise(ng)
-
-    def add_noise(self, ng):
-        ng.inp_I += (ng.vector("normal(0,1)") - 0.5) * self.noise_range
-
-
 class RandomCurrent(Behavior):
     def initialize(self, ng):
         self.init_I = self.parameter("init_I", None)
